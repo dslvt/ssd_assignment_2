@@ -1,4 +1,5 @@
 import datetime
+from tracemalloc import start
 
 institutions = []
 
@@ -9,11 +10,17 @@ class EdInstitution:
         self.classrooms = classrooms
         self.lectures = lectures
 
-    def add(self):
-        pass
+    def add_classroom(self, classroom):
+        self.classrooms.append(classroom)
 
-    def remove(self):
-        pass
+    def add_lecture(self, lecture):
+        self.lectures.append(lecture)
+
+    def remove_classroom(self, idx):
+        self.classrooms.remove(idx)
+
+    def remove_lecture(self, idx):
+        self.lectures.remove(idx)
 
     def save_to_file(self):
         pass
@@ -21,8 +28,33 @@ class EdInstitution:
     def restore_from_file(self):
         pass
 
+    def set_name(self, name):
+        self.name = name
+
+    def get_name(self):
+        return self.name
+
+    def set_classrooms(self, classrooms):
+        self.classrooms = classrooms
+
+    def get_classrooms(self):
+        return self.classrooms
+
+    def set_lectures(self, lectures):
+        self.lectures = lectures
+
+    def get_lectures(self):
+        return self.lectures
+
     def __str__(self) -> str:
-        pass
+        available_classrooms = None
+        available_lectures = None
+
+        s = f"{self.name}\n"
+        s += f"classrooms : {len(self.classrooms)}\n"
+        s += f"Auditorium(s) : {len(self.lectures)}\n"
+        s += f"Status for today (now) : {available_classrooms} available classroom(s) and {available_lectures} available auditorium(s)"
+        return s
 
 
 class Room:
@@ -42,6 +74,30 @@ class Room:
         s += "]\n"
         return s
 
+    def set_capacity(self, capacity):
+        self.capacity = capacity
+
+    def get_capacity(self):
+        return self.capacity
+
+    def set_number(self, number):
+        self.number = number
+
+    def get_number(self):
+        return self.number
+
+    def set_air_conditioner(self, is_has_air_conditioner):
+        self.is_has_air_conditioner = is_has_air_conditioner
+
+    def get_air_conditioner(self):
+        return self.is_has_air_conditioner
+
+    def set_activities(self, activities):
+        self.activities = activities
+
+    def get_activities(self):
+        return self.activities
+
     @staticmethod
     def is_working_hours(time):
         start_working_hours = datetime(8, 0, 0)
@@ -54,6 +110,19 @@ class Activity:
         self.name = name
         self.start_time = start_time
         self.end_time = end_time
+
+    def get_name(self):
+        return self.name
+
+    def set_name(self, name):
+        self.name = name
+
+    def set_time_interval(self, start_time, end_time):
+        self.start_time = start_time
+        self.end_time = end_time
+
+    def get_time_interval(self):
+        return self.start_time, self.end_time
 
     def __str__(self) -> str:
         s = f"Activity name: {self.name}\n"
@@ -109,6 +178,12 @@ def cmd_assign_activity_to_lecture_auditorium():
     pass
 
 
+def cmd_exit():
+    print("In database you have :")
+    for institution in institutions:
+        print(institution)
+
+
 if __name__ == "__main__":
     while True:
         print(
@@ -131,6 +206,7 @@ if __name__ == "__main__":
         elif input_number == 4:
             cmd_assign_activity_to_lecture_auditorium()
         elif input_number == 5:
+            cmd_exit()
             break
         else:
             print("Invalid input command")
