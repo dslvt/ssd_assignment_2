@@ -1,3 +1,4 @@
+import pickle
 import datetime
 
 institutions = []
@@ -9,23 +10,33 @@ class EdInstitution:
         self.classrooms = classrooms
         self.lectures = lectures
 
-    def add_classroom(self, classroom):
-        self.classrooms.append(classroom)
+    def add(self, room, type):
+        if type == "classroom":
+            self.classrooms.append(room)
+        elif type == "lecture":
+            self.lectures.append(room)
+        else:
+            print("Given incorrect type of room")
 
-    def add_lecture(self, lecture):
-        self.lectures.append(lecture)
-
-    def remove_classroom(self, idx):
-        self.classrooms.remove(idx)
-
-    def remove_lecture(self, idx):
-        self.lectures.remove(idx)
+    def remove(self, idx, type):
+        if type == "classroom":
+            self.classrooms.remove(idx)
+        elif type == "lecture":
+            self.lectures.remove(idx)
+        else:
+            print("Given incorrect type of room")
 
     def save_to_file(self):
-        pass
+        with open(f"database/{self.name}.pickle", "wb") as f:
+            pickle.dump(self, f)
 
     def restore_from_file(self):
-        pass
+        with open(f"database/{self.name}.pickle", "rb") as f:
+            obj = pickle.load(f)
+
+        self.name = obj.name
+        self.classrooms = obj.classrooms
+        self.lectures = obj.lectures
 
     def set_name(self, name):
         self.name = name
@@ -46,8 +57,16 @@ class EdInstitution:
         return self.lectures
 
     def __str__(self) -> str:
-        available_classrooms = None
-        available_lectures = None
+        now = datetime.datetime.now()
+
+        available_classrooms = 0
+        available_lectures = 0
+
+        for classroom in self.classrooms():
+            available_classrooms += 1 - sum(classroom.is_available(now))
+
+        for lectures in self.lectures():
+            available_lectures += 1 - sum(lectures.is_available(now))
 
         s = f"{self.name}\n"
         s += f"Classroom(s) : {len(self.classrooms)}\n"
@@ -127,6 +146,13 @@ class Room:
                     is_has_overlap = True
 
         return is_has_overlap
+
+    def is_available(self, time):
+        available_activities = []
+        for activity in self.activities:
+            start_time, end_time = activity.get_time_interval()
+            available_activities.append(start_time <= time <= end_time)
+        return available_activities
 
     @staticmethod
     def is_in_working_hours(time):
@@ -212,6 +238,7 @@ def cmd_exit():
     print("In database you have :")
     for institution in institutions:
         print(institution)
+        print()
 
 
 def restore_universities():
