@@ -2,7 +2,6 @@ import pickle
 import datetime
 from os import listdir
 from os.path import isfile, join
-from xmlrpc.client import DateTime
 
 DATABASE_PATH = "database"
 institutions = {}
@@ -69,7 +68,7 @@ class EdInstitution:
                 classroom.append_activity(activity)
 
     def __str__(self) -> str:
-        now = datetime.datetime.now()
+        now = datetime.time.now()
 
         available_classrooms = 0
         available_lectures = 0
@@ -186,8 +185,8 @@ class Room:
 
     @staticmethod
     def is_in_working_hours(time):
-        start_working_hours = datetime(8, 0, 0)
-        end_working_hours = datetime(21, 0, 0)
+        start_working_hours = datetime.time(8, 0, 0)
+        end_working_hours = datetime.time(21, 0, 0)
         return start_working_hours <= time <= end_working_hours
 
 
@@ -212,16 +211,16 @@ class Activity:
 
     def __str__(self) -> str:
         s = f"Activity name: {self.name}\n"
-        s += f"Time interval: {self.start_time}:{self.end_time}\n"
+        s += f"Time interval: {self.start_time}-{self.end_time}\n"
         return s
 
 
-class Klassroom(Room):
+class Classroom(Room):
     def __init__(self, capacity, number, is_has_air_conditioner, activities):
         super().__init__(capacity, number, is_has_air_conditioner, activities)
 
     def __str__(self) -> str:
-        s = "Klassroom\n"
+        s = "Classroom info:\n"
         s += super().__str__()
         return s
 
@@ -231,7 +230,7 @@ class LectureAuditorium(Room):
         super().__init__(capacity, number, is_has_air_conditioner, activities)
 
     def __str__(self) -> str:
-        s = "Lecture Auditorium\n"
+        s = "Lecture auditorium info:\n"
         s += super().__str__()
         return s
 
@@ -243,7 +242,7 @@ def is_institution_exist(name):
 def room_builder(type, capacity, number, has_air_conditioner):
     room = None
     if type == 1:
-        room = Klassroom(capacity, number, has_air_conditioner, [])
+        room = Classroom(capacity, number, has_air_conditioner, [])
     elif type == 2:
         room = LectureAuditorium(capacity, number, has_air_conditioner, [])
     else:
@@ -256,7 +255,7 @@ def cmd_add_room():
     while True:
         print("Enter institution name :")
         institution_name = input()
-        print("Enter (classroom - 1 or Auditorium - 2):")
+        print("Enter (classroom - 1 or auditorium - 2):")
         type_of_room = int(input())
         print("Enter (capacity, number, air conditioner- yes/no):")
         capacity, number, has_air_conditioner = input().split(" ")
@@ -268,7 +267,7 @@ def cmd_add_room():
         room = room_builder(type_of_room, capacity, number, has_air_conditioner)
         institutions[institution_name].add(room, type_of_room)
 
-        print("Add another Auditorium to Innopolis University? (yes/no)")
+        print(f"Add another auditorium to {institution_name}? (yes/no)")
         continue_condition = input()
         if continue_condition == "no":
             break
@@ -290,7 +289,7 @@ def cmd_print_summary():
             break
 
 
-def cmd_assign_activity_to_classroom():
+def cmd_assign_activity_to_room():
     while True:
         print("Enter institution name :")
         institution_name = input()
@@ -320,10 +319,6 @@ def cmd_assign_activity_to_classroom():
         continue_condition = input()
         if continue_condition == "no":
             break
-
-
-def cmd_assign_activity_to_lecture_auditorium():
-    pass
 
 
 def cmd_exit():
@@ -389,9 +384,9 @@ if __name__ == "__main__":
         elif input_number == 3:
             cmd_get_institution_full_info()
         elif input_number == 4:
-            cmd_assign_activity_to_classroom()
+            cmd_assign_activity_to_room()
         elif input_number == 5:
-            cmd_assign_activity_to_lecture_auditorium()
+            cmd_assign_activity_to_room()
         elif input_number == 6:
             cmd_exit()
             break
