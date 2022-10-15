@@ -1,7 +1,9 @@
 import pickle
 import datetime
-from xml.etree.ElementTree import iselement
+from os import listdir
+from os.path import isfile, join
 
+DATABASE_PATH = "database"
 institutions = {}
 
 
@@ -28,14 +30,13 @@ class EdInstitution:
             print("Given incorrect type of room")
 
     def save_to_file(self):
-        with open(f"database/{self.name}.pickle", "wb") as f:
+        with open(f"{DATABASE_PATH}/{self.name}.pickle", "wb") as f:
             pickle.dump(self, f)
 
     def restore_from_file(self):
-        with open(f"database/{self.name}.pickle", "rb") as f:
+        with open(f"{DATABASE_PATH}/{self.name}.pickle", "rb") as f:
             obj = pickle.load(f)
 
-        self.name = obj.name
         self.classrooms = obj.classrooms
         self.lectures = obj.lectures
 
@@ -63,10 +64,10 @@ class EdInstitution:
         available_classrooms = 0
         available_lectures = 0
 
-        for classroom in self.classrooms():
+        for classroom in self.classrooms:
             available_classrooms += 1 - sum(classroom.is_available(now))
 
-        for lectures in self.lectures():
+        for lectures in self.lectures:
             available_lectures += 1 - sum(lectures.is_available(now))
 
         s = f"{self.name}\n"
@@ -258,18 +259,31 @@ def cmd_assign_activity_to_lecture_auditorium():
 
 
 def cmd_exit():
+    save_institutions()
+
     print("In database you have :")
-    for institution in institutions:
+    for institution in institutions.values():
         print(institution)
         print()
 
 
-def restore_universities():
-    pass
+def restore_institutions():
+    files = [f for f in listdir(DATABASE_PATH) if isfile(join(DATABASE_PATH, f))]
+    files = [file.split(".")[0] for file in files]
+
+    for file in files:
+        institution = EdInstitution(file, [], [])
+        institution.restore_from_file()
+        institutions[file] = institution
+
+
+def save_institutions():
+    for inst in institutions.values():
+        inst.save_to_file()
 
 
 if __name__ == "__main__":
-    restore_universities()
+    restore_institutions()
 
     while True:
         print(
