@@ -68,7 +68,8 @@ class EdInstitution:
                 classroom.append_activity(activity)
 
     def __str__(self) -> str:
-        now = datetime.time.now()
+        now = datetime.datetime.now()
+        now = datetime.time(now.hour, now.minute, now.second)
 
         available_classrooms = 0
         available_lectures = 0
