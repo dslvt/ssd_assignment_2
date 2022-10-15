@@ -2,6 +2,7 @@ import pickle
 import datetime
 from os import listdir
 from os.path import isfile, join
+from xmlrpc.client import DateTime
 
 DATABASE_PATH = "database"
 institutions = {}
@@ -58,6 +59,15 @@ class EdInstitution:
     def get_lectures(self):
         return self.lectures
 
+    def add_activity_by_room_number(self, activity, room_number):
+        for lecture in self.lectures:
+            if lecture.get_number() == room_number:
+                lecture.append_activity(activity)
+
+        for classroom in self.classrooms:
+            if classroom.get_number() == room_number:
+                classroom.append_activity(activity)
+
     def __str__(self) -> str:
         now = datetime.datetime.now()
 
@@ -74,6 +84,17 @@ class EdInstitution:
         s += f"Classroom(s) : {len(self.classrooms)}\n"
         s += f"Auditorium(s) : {len(self.lectures)}\n"
         s += f"Status for today (now) : {available_classrooms} available classroom(s) and {available_lectures} available auditorium(s)"
+        return s
+
+    def get_full_info(self):
+        s = f"{self.name}\n"
+        s += "Classrooms: \n"
+        for classroom in self.classrooms:
+            s += str(classroom)
+
+        for auditorium in self.lectures:
+            s += str(auditorium)
+
         return s
 
 
@@ -99,6 +120,8 @@ class Room:
 
         is_has_overlap = Room.is_activities_overlap(activities)
         assert not is_has_overlap, "Activities overlap"
+
+        return is_all_activities_in_working_hours and not is_has_overlap
 
     def __str__(self) -> str:
         s = f"Capacity: {self.capacity}\n"
@@ -134,6 +157,11 @@ class Room:
 
     def get_activities(self):
         return self.activities
+
+    def append_activity(self, activity):
+        new_activities = self.activities + [activity]
+        if self.check_activities(new_activities):
+            self.activities = new_activities
 
     @staticmethod
     def is_activities_overlap(activities):
@@ -247,11 +275,51 @@ def cmd_add_room():
 
 
 def cmd_print_summary():
-    pass
+    while True:
+        print("Enter institution name :")
+        institution_name = input()
+
+        if institution_name in institutions.keys():
+            print(institutions[institution_name])
+        else:
+            print(f"Instituion {institution_name} not found!")
+
+        print("Print another institution summary? (yes/no)")
+        continue_condition = input()
+        if continue_condition == "no":
+            break
 
 
 def cmd_assign_activity_to_classroom():
-    pass
+    while True:
+        print("Enter institution name :")
+        institution_name = input()
+
+        if institution_name in institutions.keys():
+            print("Enter activity name :")
+            activity_name = input()
+            print("Enter time interval: (10:00-11:30)")
+            time_interval = input()
+            start_time, end_time = time_interval.split("-")
+            s_hour, s_min = start_time.split(":")
+            e_hour, e_min = end_time.split(":")
+            start_time = datetime.time(int(s_hour), int(s_min), 0)
+            end_time = datetime.time(int(e_hour), int(e_min), 0)
+
+            activity = Activity(activity_name, start_time, end_time)
+            institution = institutions[institution_name]
+
+            print("Enter room number:")
+            room_number = input()
+            institution.add_activity_by_room_number(activity, room_number)
+            print("Activity succesfully added!")
+        else:
+            print(f"Instituion {institution_name} not found!")
+
+        print("Add another another activity to room? (yes/no)")
+        continue_condition = input()
+        if continue_condition == "no":
+            break
 
 
 def cmd_assign_activity_to_lecture_auditorium():
@@ -282,6 +350,22 @@ def save_institutions():
         inst.save_to_file()
 
 
+def cmd_get_institution_full_info():
+    while True:
+        print("Enter institution name :")
+        institution_name = input()
+
+        if institution_name in institutions.keys():
+            print(institutions[institution_name].get_full_info())
+        else:
+            print(f"Instituion {institution_name} not found!")
+
+        print("Print another institution info? (yes/no)")
+        continue_condition = input()
+        if continue_condition == "no":
+            break
+
+
 if __name__ == "__main__":
     restore_institutions()
 
@@ -290,9 +374,10 @@ if __name__ == "__main__":
             """Choose one one operation from below :
                 1 : Add classroom or Auditorium to institution
                 2 : Print institution summary
-                3 : Assign activity to classroom
-                4 : Assign activity to LectureAuditorium
-                5 : Exit program"""
+                3 : Get institution full info
+                4 : Assign activity to classroom
+                5 : Assign activity to LectureAuditorium
+                6 : Exit program"""
         )
 
         input_number = int(input())
@@ -302,10 +387,12 @@ if __name__ == "__main__":
         elif input_number == 2:
             cmd_print_summary()
         elif input_number == 3:
-            cmd_assign_activity_to_classroom()
+            cmd_get_institution_full_info()
         elif input_number == 4:
-            cmd_assign_activity_to_lecture_auditorium()
+            cmd_assign_activity_to_classroom()
         elif input_number == 5:
+            cmd_assign_activity_to_lecture_auditorium()
+        elif input_number == 6:
             cmd_exit()
             break
         else:
