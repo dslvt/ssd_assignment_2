@@ -1,5 +1,4 @@
 import datetime
-from tracemalloc import start
 
 institutions = []
 
@@ -51,7 +50,7 @@ class EdInstitution:
         available_lectures = None
 
         s = f"{self.name}\n"
-        s += f"classrooms : {len(self.classrooms)}\n"
+        s += f"Classroom(s) : {len(self.classrooms)}\n"
         s += f"Auditorium(s) : {len(self.lectures)}\n"
         s += f"Status for today (now) : {available_classrooms} available classroom(s) and {available_lectures} available auditorium(s)"
         return s
@@ -63,6 +62,22 @@ class Room:
         self.number = number
         self.is_has_air_conditioner = is_has_air_conditioner
         self.activities = activities
+
+        self.check_activities(activities)
+
+    def check_activities(self, activities):
+        is_all_activities_in_working_hours = True
+        for activity in activities:
+            start_time, end_time = activity.get_time_interval()
+            is_all_activities_in_working_hours *= Room.is_in_working_hours(start_time)
+            is_all_activities_in_working_hours *= Room.is_in_working_hours(end_time)
+
+            assert (
+                is_all_activities_in_working_hours
+            ), "Activity is not in working hours"
+
+        is_has_overlap = Room.is_activities_overlap(activities)
+        assert not is_has_overlap, "Activities overlap"
 
     def __str__(self) -> str:
         s = f"Capacity: {self.capacity}\n"
@@ -94,12 +109,27 @@ class Room:
 
     def set_activities(self, activities):
         self.activities = activities
+        self.check_activities(self.activities)
 
     def get_activities(self):
         return self.activities
 
     @staticmethod
-    def is_working_hours(time):
+    def is_activities_overlap(activities):
+        is_has_overlap = False
+        for i in range(len(activities)):
+            for j in range(len(activities)):
+                i_start, i_end = activities[i].get_time_interval()
+                j_start, j_end = activities[j].get_time_interval()
+                if i != j and (
+                    i_start <= j_start <= i_end or j_start <= i_start <= j_end
+                ):
+                    is_has_overlap = True
+
+        return is_has_overlap
+
+    @staticmethod
+    def is_in_working_hours(time):
         start_working_hours = datetime(8, 0, 0)
         end_working_hours = datetime(21, 0, 0)
         return start_working_hours <= time <= end_working_hours
@@ -131,8 +161,8 @@ class Activity:
 
 
 class Klassroom(Room):
-    def __init__(self):
-        pass
+    def __init__(self, capacity, number, is_has_air_conditioner, activities):
+        super.__init__(capacity, number, is_has_air_conditioner, activities)
 
     def __str__(self) -> str:
         s = "Klassroom\n"
@@ -141,8 +171,8 @@ class Klassroom(Room):
 
 
 class LectureAuditorium(Room):
-    def __init__(self):
-        pass
+    def __init__(self, capacity, number, is_has_air_conditioner, activities):
+        super.__init__(capacity, number, is_has_air_conditioner, activities)
 
     def __str__(self) -> str:
         s = "Lecture Auditorium\n"
@@ -184,7 +214,13 @@ def cmd_exit():
         print(institution)
 
 
+def restore_universities():
+    pass
+
+
 if __name__ == "__main__":
+    restore_universities()
+
     while True:
         print(
             """Choose one one operation from below :
