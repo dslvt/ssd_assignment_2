@@ -1,7 +1,8 @@
 import pickle
 import datetime
+from xml.etree.ElementTree import iselement
 
-institutions = []
+institutions = {}
 
 
 class EdInstitution:
@@ -11,17 +12,17 @@ class EdInstitution:
         self.lectures = lectures
 
     def add(self, room, type):
-        if type == "classroom":
+        if type == 1:
             self.classrooms.append(room)
-        elif type == "lecture":
+        elif type == 2:
             self.lectures.append(room)
         else:
             print("Given incorrect type of room")
 
     def remove(self, idx, type):
-        if type == "classroom":
+        if type == 1:
             self.classrooms.remove(idx)
-        elif type == "lecture":
+        elif type == 2:
             self.lectures.remove(idx)
         else:
             print("Given incorrect type of room")
@@ -188,7 +189,7 @@ class Activity:
 
 class Klassroom(Room):
     def __init__(self, capacity, number, is_has_air_conditioner, activities):
-        super.__init__(capacity, number, is_has_air_conditioner, activities)
+        super().__init__(capacity, number, is_has_air_conditioner, activities)
 
     def __str__(self) -> str:
         s = "Klassroom\n"
@@ -198,12 +199,28 @@ class Klassroom(Room):
 
 class LectureAuditorium(Room):
     def __init__(self, capacity, number, is_has_air_conditioner, activities):
-        super.__init__(capacity, number, is_has_air_conditioner, activities)
+        super().__init__(capacity, number, is_has_air_conditioner, activities)
 
     def __str__(self) -> str:
         s = "Lecture Auditorium\n"
         s += super().__str__()
         return s
+
+
+def is_institution_exist(name):
+    return name in institutions.keys()
+
+
+def room_builder(type, capacity, number, has_air_conditioner):
+    room = None
+    if type == 1:
+        room = Klassroom(capacity, number, has_air_conditioner, [])
+    elif type == 2:
+        room = LectureAuditorium(capacity, number, has_air_conditioner, [])
+    else:
+        print(f"Incorrect type of room: {type}")
+
+    return room
 
 
 def cmd_add_room():
@@ -215,6 +232,12 @@ def cmd_add_room():
         print("Enter (capacity, number, air conditioner- yes/no):")
         capacity, number, has_air_conditioner = input().split(" ")
         print(f"Auditorium succesfully added to {institution_name}")
+
+        if not is_institution_exist(institution_name):
+            institutions[institution_name] = EdInstitution(institution_name, [], [])
+
+        room = room_builder(type_of_room, capacity, number, has_air_conditioner)
+        institutions[institution_name].add(room, type_of_room)
 
         print("Add another Auditorium to Innopolis University? (yes/no)")
         continue_condition = input()
