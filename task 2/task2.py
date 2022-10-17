@@ -32,7 +32,16 @@ def cmd_get_status():
     s += f"\tTotal sessions : {total_sesstions}\n"
     s += f"\tAverage time spent per session : {avg_time}\n"
     s += f"\tSum of hours spent by all users : {hours_spend}\n"
+
     print(s)
+
+    print("Save summary ? (yes/no)")
+    is_saving_summary = input()
+    if is_saving_summary == "yes" or is_saving_summary == "y":
+        with open(
+            SUMMARY_PATH + f"statistics_last_7_{current_date}" + ".txt", "w"
+        ) as f:
+            f.write(s)
 
 
 def cmd_print_summary():
@@ -164,10 +173,6 @@ def cmd_get_top_users():
     print(timestamps.head(5))
 
 
-def cmd_exit():
-    pass
-
-
 def get_file_names(directory):
     return [f for f in listdir(directory) if isfile(join(directory, f))]
 
@@ -218,7 +223,6 @@ if __name__ == "__main__":
             cmd_get_top_users()
         elif input_number == 6:
             cmd_get_status()
-            cmd_exit()
             break
         else:
             print("Invalid input command")
