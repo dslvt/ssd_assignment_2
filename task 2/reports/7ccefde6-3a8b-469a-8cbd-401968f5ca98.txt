@@ -1,0 +1,15 @@
+User with id : 7ccefde6-3a8b-469a-8cbd-401968f5ca98
+	Number of sessions : 13
+	Date of first session : 2022-09-01
+	Date of most recent session : 2022-09-04
+	Average time spent per session : 180.15 min
+	Most frequently used device : Windows
+	Used devices: Windows
+	Average of:
+		Round trip time (RTT): 30.86
+		Frames per Second: 29.84
+		Dropped Frames: 0.03
+		Bitrate: 2640.72
+	Total number of bad sessions: -1
+	Estimated next session time: 13.08 min
+	Super user : False

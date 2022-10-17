@@ -5,6 +5,8 @@ import pandas as pd
 
 data = None
 DATA_PATH = "data/"
+SUMMARY_PATH = "reports/"
+model = None
 
 
 def timestamp_calc(df):
@@ -34,7 +36,108 @@ def cmd_get_status():
 
 
 def cmd_print_summary():
-    pass
+    while True:
+        print("Enter user id:")
+        user_id = input()
+        print("Enter period (dd/mm/yy - dd/mm/yy) :")
+        period = input().split()
+        start_date = pd.Timestamp(period[0])
+        finish_date = pd.Timestamp(period[-1])
+
+        mask = (data["timestamp"] >= start_date) & (data["timestamp"] <= finish_date)
+        filtered_data = data.loc[mask]
+        is_user_found = (
+            filtered_data[filtered_data["client_user_id"] == user_id].shape[0] > 0
+        )
+        if is_user_found:
+            print("User found!")
+        else:
+            print("User not found!")
+            continue
+
+        sess_count = (
+            filtered_data.loc[filtered_data["client_user_id"] == user_id]["session_id"]
+            .unique()
+            .shape[0]
+        )
+
+        sess_first = sorted(
+            filtered_data.loc[filtered_data["client_user_id"] == user_id][
+                "timestamp"
+            ].dt.date.unique()
+        )[0]
+
+        sess_recent = sorted(
+            filtered_data.loc[filtered_data["client_user_id"] == user_id][
+                "timestamp"
+            ].dt.date.unique()
+        )[-1]
+
+        timestamps = filtered_data.groupby(by=["client_user_id", "session_id"]).apply(
+            timestamp_calc
+        )
+        timestamps = timestamps.to_frame()
+        avg_timedelta = timestamps.mean(level=0).loc[user_id][0].total_seconds() / 60
+
+        frequent_device = (
+            filtered_data.loc[filtered_data["client_user_id"] == user_id]["device"]
+            .value_counts(normalize=True)
+            .index.values[0]
+        )
+
+        used_devices = filtered_data.loc[filtered_data["client_user_id"] == user_id][
+            "device"
+        ].unique()[0]
+
+        rtt = filtered_data[filtered_data["client_user_id"] == user_id]["RTT"].mean()
+        fps = filtered_data[filtered_data["client_user_id"] == user_id]["FPS"].mean()
+        dropped_frames = filtered_data[filtered_data["client_user_id"] == user_id][
+            "dropped_frames"
+        ].mean()
+        bitrate = filtered_data[filtered_data["client_user_id"] == user_id][
+            "bitrate"
+        ].mean()
+
+        current_date = filtered_data["timestamp"].max()
+        cut_off = current_date - pd.offsets.Day(7)
+        filtered_df = (
+            filtered_data[
+                (filtered_data["timestamp"] > cut_off)
+                & (filtered_data["client_user_id"] == user_id)
+            ]
+            .groupby(by=["session_id"])
+            .apply(timestamp_calc)
+        )
+        is_super_user = all(filtered_df > pd.Timedelta(60, "m"))
+
+        s = f"User with id : {user_id}\n"
+        s += f"\tNumber of sessions : {sess_count}\n"
+        s += f"\tDate of first session : {sess_first}\n"
+        s += f"\tDate of most recent session : {sess_recent}\n"
+        s += f"\tAverage time spent per session : {avg_timedelta:.2f} min\n"
+        s += f"\tMost frequently used device : {frequent_device}\n"
+        s += f"\tUsed devices: {used_devices}\n"
+        s += f"\tAverage of:\n"
+        s += f"\t\tRound trip time (RTT): {rtt:.2f}\n"
+        s += f"\t\tFrames per Second: {fps:.2f}\n"
+        s += f"\t\tDropped Frames: {dropped_frames:.2f}\n"
+        s += f"\t\tBitrate: {bitrate:.2f}\n"
+        s += f"\tTotal number of bad sessions: {-1}\n"
+        s += f"\tEstimated next session time: {timestamps[0].dt.total_seconds().sample().values[0]/60:.2f} min\n"
+        s += f"\tSuper user : {is_super_user}"
+
+        print(s)
+
+        print("Save summary ? (yes/no)")
+        is_saving_summary = input()
+        if is_saving_summary == "yes" or is_saving_summary == "y":
+            with open(SUMMARY_PATH + user_id + ".txt", "w") as f:
+                f.write(s)
+
+        print("Find another user ? (yes/no)")
+        is_another = input()
+        if is_another == "no" or is_another == "n":
+            break
 
 
 def cmd_predict_next_session():
