@@ -20,9 +20,7 @@ def cmd_get_status():
 
     total_sesstions = filtered_df["session_id"].unique().shape[0]
 
-    timestamps = filtered_df.groupby(by=["client_user_id", "session_id"]).apply(
-        timestamp_calc
-    )
+    timestamps = filtered_df.groupby(by=["session_id"]).apply(timestamp_calc)
     timestamps = timestamps.to_frame()
 
     avg_time = timestamps[0].mean()
@@ -57,7 +55,10 @@ def cmd_fetch_new_data():
 
 
 def cmd_get_top_users():
-    pass
+    timestamps = data.groupby(by=["client_user_id", "session_id"]).apply(timestamp_calc)
+    timestamps = timestamps.to_frame()
+    timestamps = timestamps.sum(level=0).sort_values(by=[0], ascending=False)
+    print(timestamps.head(5))
 
 
 def cmd_exit():
