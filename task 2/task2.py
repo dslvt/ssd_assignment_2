@@ -1,8 +1,10 @@
-from urls import file_paths, file_names
+import pickle
 from os import listdir
 from os.path import isfile, join
+
 import pandas as pd
-import pickle
+
+from urls import file_names, file_paths
 
 data = None
 DATA_PATH = "data/"
