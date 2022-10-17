@@ -35,7 +35,7 @@ def cmd_get_status():
 
     print(s)
 
-    print("Save summary ? (yes/no)")
+    print("Save summary? (yes/no)")
     is_saving_summary = input()
     if is_saving_summary == "yes" or is_saving_summary == "y":
         with open(
@@ -150,7 +150,27 @@ def cmd_print_summary():
 
 
 def cmd_predict_next_session():
-    pass
+    while True:
+        print("Enter user id:")
+        user_id = input()
+        is_user_found = data[data["client_user_id"] == user_id].shape[0] > 0
+        if is_user_found:
+            print("User found!")
+        else:
+            print("User not found!")
+            continue
+
+        predicted_time = (
+            data[data["client_user_id"] == user_id]
+            .groupby(by=["session_id"])
+            .apply(timestamp_calc)
+        ).to_frame().mean().dt.total_seconds().values[0] / 60
+        print(f"Predicted next session duration: {predicted_time} min")
+
+        print("Find another user ? (yes/no)")
+        is_another = input()
+        if is_another == "no" or is_another == "n":
+            break
 
 
 def cmd_fetch_new_data():
