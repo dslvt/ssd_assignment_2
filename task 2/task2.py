@@ -2,6 +2,7 @@ from urls import file_paths, file_names
 from os import listdir
 from os.path import isfile, join
 import pandas as pd
+import pickle
 
 data = None
 DATA_PATH = "data/"
@@ -119,6 +120,14 @@ def cmd_print_summary():
         )
         is_super_user = all(filtered_df > pd.Timedelta(60, "m"))
 
+        X_predict = (
+            filtered_data[filtered_data["client_user_id"] == user_id]
+            .groupby(by="session_id")
+            .mean()[["FPS", "RTT", "dropped_frames", "bitrate"]]
+            .to_numpy()
+        )
+        num_bad_sessions = model.predict(X_predict)
+
         s = f"User with id : {user_id}\n"
         s += f"\tNumber of sessions : {sess_count}\n"
         s += f"\tDate of first session : {sess_first}\n"
@@ -131,7 +140,7 @@ def cmd_print_summary():
         s += f"\t\tFrames per Second: {fps:.2f}\n"
         s += f"\t\tDropped Frames: {dropped_frames:.2f}\n"
         s += f"\t\tBitrate: {bitrate:.2f}\n"
-        s += f"\tTotal number of bad sessions: {-1}\n"
+        s += f"\tTotal number of bad sessions: {sum(num_bad_sessions)}\n"
         s += f"\tEstimated next session time: {timestamps[0].dt.total_seconds().sample().values[0]/60:.2f} min\n"
         s += f"\tSuper user : {is_super_user}"
 
@@ -216,6 +225,8 @@ if __name__ == "__main__":
             downloaded_files.append(pd.read_csv(DATA_PATH + file_path))
         data = pd.concat(downloaded_files, ignore_index=True)
     data["timestamp"] = pd.to_datetime(data["timestamp"])
+
+    model = pickle.load(open("clf.model", "rb"))
 
     while True:
         print(
