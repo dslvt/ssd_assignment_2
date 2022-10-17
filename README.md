@@ -10,7 +10,7 @@ Options:
 4. Assign activity to LectureAuditorium
 5. Exit program
 
-Libraries: Pickle Datetime, Os
+Libraries: Pickle, Datetime, Os
 
 ### A system that can analyze cloud gaming users. 
 The system is accessed through an interactive terminal.
