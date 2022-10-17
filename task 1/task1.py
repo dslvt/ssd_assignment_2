@@ -368,7 +368,7 @@ if __name__ == "__main__":
     while True:
         print(
             """Choose one one operation from below :
-                1 : Add classroom or Auditorium to institution
+                1 : Add classroom or auditorium to institution
                 2 : Print institution summary
                 3 : Get institution full info
                 4 : Assign activity to classroom
